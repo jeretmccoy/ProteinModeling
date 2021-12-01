@@ -1,7 +1,7 @@
 rm(list = ls()) #used to clear local environment
 
 
-generateChain <- function(length, direction)
+generateChain <- function(length, direction) #generates coordinates matrix from directions vector
 {
   x <- matrix(1:2*length, nrow = length, ncol = 3)
   x[1,1] <- 0
@@ -32,7 +32,7 @@ generateChain <- function(length, direction)
   return (x)
 }
 
-generateDirs <- function(length)
+generateDirs <- function(length) #generates random directions. May overlap. 
 {
   set <- sample(4, length, replace = TRUE)
   directions <- sample(0, length, replace = TRUE)
@@ -61,7 +61,7 @@ generateDirs <- function(length)
   return (directions)
 }
 
-SAW <- function(length)
+SAW <- function(length) #Self Avoiding Walk. Sequentially generates valid direction vectors (no overlap). 
 {
   x <- matrix(0, nrow = length * 2 + 1, ncol = length * 2 + 1)
   lastx <- length + 1
@@ -124,7 +124,7 @@ SAW <- function(length)
 
 
 
-checkValid <- function(direction, length)
+checkValid <- function(direction, length) #checks if a direction vector is valid. O(n), checks a list to see if it was overwritten. 
 {
   if (length == 1)
   {
@@ -176,7 +176,7 @@ checkValid <- function(direction, length)
 
 
 
-checkValidFast <- function(direction, length)
+checkValidFast <- function(direction, length) #called fast because the above function used to be O(n^2). This implementation uses a hash table. O(n).
 {
   a <- 1:length
   b <- 2:length
@@ -236,7 +236,7 @@ checkValidFast <- function(direction, length)
   return(TRUE)
 }
 
-squdist <- function(x1, y1, x2, y2)
+squdist <- function(x1, y1, x2, y2) #squared distance. Used for optimization purposes. 
 {
   x2x1 <- x2 - x1
   x2x1 <- x2x1 * x2x1
@@ -246,7 +246,7 @@ squdist <- function(x1, y1, x2, y2)
   return(ret)
 }
 
-distance <- function(x1, y1, x2, y2)
+distance <- function(x1, y1, x2, y2) #distance formula. 
 {
   x2x1 <- x2 - x1
   x2x1 <- x2x1 * x2x1
@@ -257,7 +257,7 @@ distance <- function(x1, y1, x2, y2)
   return(ret)
 }
 
-Energy <- function(coords, length)
+Energy <- function(coords, length) #Energy function. Decreases when H amino acids are closer together. 
 {
   en <- 0
   for (i in 1:length) #n^2 time fix if slow
@@ -279,7 +279,7 @@ Energy <- function(coords, length)
   return(en)
 }
 
-pivot <- function(oldDir, length)
+pivot <- function(oldDir, length) #pivot move. Randomly selects index and tries to rotate a 5 amino acid section. Valid 8% of the time. 
 {
   index <- sample(length - 1, 1, replace = TRUE)
   lower <- index - 5
@@ -310,7 +310,7 @@ pivot <- function(oldDir, length)
   return(oldDir)
 }
 
-mutateOneDir <- function(oldDir, length)
+mutateOneDir <- function(oldDir, length) #changes one direction. Valid about half the time. 
 {
   index <- sample(length - 1, 1, replace = TRUE)
   newWay <- sample(4, 1, replace = TRUE)
@@ -334,7 +334,7 @@ mutateOneDir <- function(oldDir, length)
   return(oldDir)
 }
 
-snakeMove <- function(oldDir, length)
+snakeMove <- function(oldDir, length) #inverts directions in a snakelike fashion. Valid 1% of the time. 
 {
   index <- sample(length - 1, 1, replace = TRUE)
   lower <- index - 5
@@ -366,43 +366,13 @@ snakeMove <- function(oldDir, length)
 }
 
 
-#CRUDE MONTE CARLO -- RANDOMLY SAMPLE VALID STATES BLINDLY
-bestenergy <- 0
-length <- 50
-bestx <- 0
-directions <- SAW(length)
-while(directions == FALSE)
-{
-  directions <- SAW(length)
-}
-x <- generateChain(length, directions)
-for(i in 1:length)
-{
-  x[i,3] <- HP[i]
-}
-for (i in 1:10000)
-{
-  print(i)
-  directions <- SAW(length)
-  while(directions == FALSE)
-  {
-    directions <- SAW(length)
-  }
-  
-  x <- generateChain(length, directions)
-  for(i in 1:length)
-  {
-    x[i,3] <- HP[i]
-  }
-  energy <- Energy(x,length)
-  if (energy < bestenergy)
-  {
-    bestenergy <- energy
-    bestx <- x
-  }
-}
-
-MCMC <- function (burnIn = 1000, itr = 10000, length = 50, pivot = TRUE, snake = TRUE, prob = .25)
+#main MCMC function. Call this to run the simulation. 
+#burnIn refers to the number of random states surveyed before the chain begins. 
+#itr refers to number of chain iterations. 
+#length is the number of amino acids in the simulated protein. 
+#pivot and snake refer to whether or not those moves are allowed. 
+#prob is the probability that a mutation which increases the energy (makes it worse) will be accepted. 
+MCMC <- function (burnIn = 1000, itr = 10000, length = 50, pivot = TRUE, snake = TRUE, prob = .25) 
 {
   directions <- SAW(length)
   while(directions == FALSE)
@@ -516,10 +486,6 @@ MCMC <- function (burnIn = 1000, itr = 10000, length = 50, pivot = TRUE, snake =
 }
 
 
-
-
-
-
 #------------------------MARKOV CHAIN MONTE CARLO--------------------------
 #------------------------------
 #Charge sequence. 0 is nonpolar (H) and decreases energy when paired. 1 is polar (P). 
@@ -535,7 +501,7 @@ mean(energylist)
 sd(energylist)
 hist(energylist, main = "MCMC, Short Chains")
 
-energylist <- MCMC(burnIn = 10000, itr = 10000, length = 50, pivot = FALSE, snake = FALSE, prob = .1)  #one big chain
+energylist <- MCMC(burnIn = 10000, itr = 10000, length = 50, pivot = TRUE, snake = TRUE, prob = .1)  #one big chain
 mean(energylist) 
 sd(energylist)
 hist(energylist, main = "MCMC, Long Chain")
