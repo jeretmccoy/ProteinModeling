@@ -219,7 +219,7 @@ checkValidFast <- function(direction, length) #called fast because the above fun
     hash[d, j] <- i
   }
   
-  for (i in a) #n^2 time fix if slow
+  for (i in a) 
   {
     d <- floor(distance(x[i,1], x[i,2], 0, 0)) + 1
     j <- 1
