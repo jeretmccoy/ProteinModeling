@@ -531,14 +531,14 @@ for (i in 1:100)
 {
   energylist <- c(energylist, MCMC(burnIn = 1000, itr = 1000, length = 50, pivot = TRUE, snake = TRUE)) # lots of shorter chains
 }
-mean(energylist) #put these states /graphs on report
+mean(energylist) 
 sd(energylist)
 hist(energylist, main = "MCMC, Short Chains")
 
 energylist <- MCMC(burnIn = 10000, itr = 10000, length = 50, pivot = FALSE, snake = FALSE, prob = .1)  #one big chain
-mean(energylist) #put these states /graphs on report
+mean(energylist) 
 sd(energylist)
-hist(energylist, main = "MCMC-LC-M, burnIn = 1,000, itr = 100,000, length = 100")
+hist(energylist, main = "MCMC, Long Chain")
 
 
 
